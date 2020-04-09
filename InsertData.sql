@@ -1,0 +1,768 @@
+/*
+    Moving Genres into new table
+*/
+
+INSERT INTO GENRES (GENRE)
+    SELECT DISTINCT GENRE1 FROM OLD_MOVIES
+    WHERE GENRE1 IS NOT NULL
+        UNION
+    SELECT DISTINCT GENRE2 FROM OLD_MOVIES
+    WHERE GENRE2 IS NOT NULL
+        UNION
+    SELECT DISTINCT GENRE3 FROM OLD_MOVIES
+    WHERE GENRE3 IS NOT NULL
+        UNION
+    SELECT DISTINCT GENRE4 FROM OLD_MOVIES
+    WHERE GENRE4 IS NOT NULL
+        UNION
+    SELECT DISTINCT GENRE5 FROM OLD_MOVIES
+    WHERE GENRE5 IS NOT NULL;
+
+/*
+    Moving Actors into new table
+*/
+
+INSERT INTO ACTORS (NAME)
+    SELECT DISTINCT ACTOR_1_NAME FROM OLD_MOVIES
+    WHERE ACTOR_1_NAME IS NOT NULL
+        UNION
+    SELECT DISTINCT ACTOR_2_NAME FROM OLD_MOVIES
+    WHERE ACTOR_2_NAME IS NOT NULL
+        UNION
+    SELECT DISTINCT ACTOR_3_NAME FROM OLD_MOVIES
+    WHERE ACTOR_3_NAME IS NOT NULL;
+
+/*
+    Moving Events into new table
+*/
+
+INSERT INTO EVENTS (EVENTNAME)
+    SELECT DISTINCT ETYPE FROM OLD_EVENTS
+    WHERE ETYPE NOT LIKE 'opinion%';
+INSERT INTO EVENTS (EVENTNAME) VALUES ('opinion');
+
+/*
+    Moving Users into new table
+*/
+
+INSERT INTO USERS (USERNAME, PASSWORD, EMAIL)
+    SELECT NICKNAME, PASSW, EMAIL FROM OLD_USERS;
+
+/*
+    Moving Profiles into new table
+*/
+
+INSERT INTO PROFILES (USERNAME, CITIZENID, FIRSTNAME, LASTNAME,
+    SECONDLASTNAME, AGE, PHONENUMBER, DATEOFBIRTH)
+    SELECT NICKNAME, CITIZENID, NAME, SURNAME, SEC_SURNAME, AGE, PHONEN,
+    TO_DATE(BIRTHDATE, 'YYYY-MM-DD')
+    FROM OLD_USERS
+    WHERE CITIZENID IS NOT NULL AND CITIZENID != '82768894J';
+
+/*
+    Moving Contracts into new table
+*/
+
+INSERT INTO CONTRACTS (CONTRACTID, USERNAME, CITIZENID, POSTALADDRESS,
+        TOWN, ZIPCODE, COUNTRY, STARTDATE, ENDDATE)
+    SELECT CONTRACTID, NICKNAME, CITIZENID, ADDRESS, TOWN, ZIPCODE, COUNTRY,
+        TO_DATE(STARTDATE, 'YYYY-MM-DD'), TO_DATE(ENDDATE, 'YYYY-MM-DD')
+    FROM OLD_USERS
+    WHERE CONTRACTID IS NOT NULL;
+
+/*
+    Moving Members into new table
+*/
+
+INSERT INTO MEMBERS (USERREF)
+    SELECT DISTINCT CLIENT FROM OLD_EVENTS
+    WHERE CLIENT IS NOT NULL;
+
+/*
+    Moving Clubs into new table
+*/
+
+INSERT INTO CLUBS (CLUBNAME, OPEN, MOTTO)
+    SELECT CLUB, DETAILS1, SUBJECT FROM OLD_EVENTS
+    WHERE ETYPE = 'foundation';
+
+/*
+    Associating Clubs with Members
+*/
+
+INSERT INTO CLUBMEMBERS (USERNAME, CLUBNAME)
+    SELECT DISTINCT CLIENT, CLUB FROM OLD_EVENTS
+    WHERE ETYPE = 'acceptance';
+
+/*
+    Moving Films into new table
+*/
+
+INSERT INTO FILMS (
+    TITLE,
+    DIRECTOR,
+    DURATION,
+    COLOR,
+    ASPECTRATIO,
+    RELEASE,
+    AGERATING,
+    COUNTRY,
+    LANGUAGE,
+    BUDGET,
+    GROSSINCOME,
+    IMDBLINK,
+    IMDBSCORE,
+    IMDBNUMBERCRITICS,
+    IMDBNUMBERUSERS,
+    DIRECTORLIKES,
+    CASTLIKES,
+    FILMLIKES,
+    FACESONPOSTER)
+    SELECT DISTINCT
+        MOVIE_TITLE,
+        DIRECTOR_NAME,
+        cast(DURATION as number),
+        COLOR,
+        cast(ASPECT_RATIO as number),
+        TO_DATE(TITLE_YEAR, 'YYYY'),
+        CONTENT_RATING,
+        COUNTRY,
+        LANGUAGE,
+        cast(BUDGET as number),
+        cast(GROSS as number),
+        MOVIE_IMDB_LINK,
+        cast(IMDB_SCORE as number),
+        cast(NUM_CRITIC_FOR_REVIEWS as number),
+        cast(NUM_VOTED_USERS as number),
+        cast(DIRECTOR_FACEBOOK_LIKES as number),
+        cast(CAST_TOTAL_FACEBOOK_LIKES as number),
+        cast(MOVIE_FACEBOOK_LIKES as number),
+        cast(FACENUMBER_IN_POSTER as number)
+    FROM OLD_MOVIES;
+
+/*
+    Associating Movies with Actors
+*/
+
+INSERT INTO MOVIEACTORS (NAME, FILMTITLE, FILMDIRECTOR, LIKES)
+    SELECT ACTOR_1_NAME, MOVIE_TITLE, DIRECTOR_NAME, ACTOR_1_FACEBOOK_LIKES
+        FROM OLD_MOVIES WHERE ACTOR_1_NAME IS NOT NULL
+    UNION
+    SELECT ACTOR_2_NAME, MOVIE_TITLE, DIRECTOR_NAME, ACTOR_2_FACEBOOK_LIKES
+        FROM OLD_MOVIES WHERE ACTOR_2_NAME IS NOT NULL
+    UNION
+    SELECT ACTOR_3_NAME, MOVIE_TITLE, DIRECTOR_NAME, ACTOR_3_FACEBOOK_LIKES
+        FROM OLD_MOVIES WHERE ACTOR_3_NAME IS NOT NULL;
+
+/*
+    Associating Movies with Genres
+*/
+
+INSERT INTO MOVIEGENRES (FILMTITLE, FILMDIRECTOR, GENRE)
+    SELECT MOVIE_TITLE, DIRECTOR_NAME, GENRE1
+        FROM OLD_MOVIES WHERE GENRE1 IS NOT NULL
+    UNION
+    SELECT MOVIE_TITLE, DIRECTOR_NAME, GENRE2
+        FROM OLD_MOVIES WHERE GENRE2 IS NOT NULL
+    UNION
+    SELECT MOVIE_TITLE, DIRECTOR_NAME, GENRE3
+        FROM OLD_MOVIES WHERE GENRE3 IS NOT NULL
+    UNION
+    SELECT MOVIE_TITLE, DIRECTOR_NAME, GENRE4
+        FROM OLD_MOVIES WHERE GENRE4 IS NOT NULL
+    UNION
+    SELECT MOVIE_TITLE, DIRECTOR_NAME, GENRE5
+        FROM OLD_MOVIES WHERE GENRE5 IS NOT NULL;
+
+/*
+    Moving History into new table       
+*/
+
+-- Registrations
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        NULL,
+        NULL,
+        SUBJECT,
+        MESSAGE,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='registration';
+
+-- Foundation
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        NULL,
+        NULL,
+        NULL,
+        MESSAGE,
+        NULL,
+        NULL,
+        NULL,
+        SUBJECT,
+        DETAILS1
+    FROM OLD_EVENTS
+    WHERE ETYPE='foundation';
+
+-- Ceasings
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        SUBJECT,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='ceasing';
+
+-- Invitation
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        SUBJECT,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='invitation';
+
+-- Application
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        NULL,
+        NULL,
+        SUBJECT,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='application';
+
+-- Opinions
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        1,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:1';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        2,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:2';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        3,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:3';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        4,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:4';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        5,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:5';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        6,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:6';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        7,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:7';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        8,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:8';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        9,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:9';
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  'opinion',
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        MESSAGE,
+        10,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='opinion:10';
+
+-- Proposals
+
+INSERT INTO HISTORY (
+    EVENTTYPE,
+    DATETIME,
+    CLUB,
+    FIRSTUSER,
+    FILMTITLE,
+    FILMDIRECTOR,
+    SUBJECT,
+    MESSAGE,
+    VALUE,
+    CONTRACT,
+    SECONDUSER,
+    MOTTO,
+    OPEN)
+SELECT  ETYPE,
+        TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        CLUB,
+        CLIENT,
+        DETAILS1,
+        DETAILS2,
+        SUBJECT,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+    FROM OLD_EVENTS
+    WHERE ETYPE='proposal' and DETAILS1 IN (SELECT TITLE FROM FILMS);
+
+-- Applications
+
+-- INSERT INTO HISTORY (
+    -- EVENTTYPE,
+    -- DATETIME,
+    -- CLUB,
+    -- FIRSTUSER,
+    -- FILMTITLE,
+    -- FILMDIRECTOR,
+    -- SUBJECT,
+    -- MESSAGE,
+    -- VALUE,
+    -- CONTRACT,
+    -- SECONDUSER,
+    -- MOTTO,
+    -- OPEN)
+-- SELECT  ETYPE,
+        -- TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        -- CLUB,
+        -- CLIENT,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- SUBJECT,
+        -- NULL,
+        -- NULL
+    -- FROM OLD_EVENTS
+    -- WHERE ETYPE='proposal' AND SUBJECT IN (SELECT USERNAME FROM USERS);
+
+-- Viewings
+
+-- INSERT INTO HISTORY (
+    -- EVENTTYPE,
+    -- DATETIME,
+    -- CLUB,
+    -- FIRSTUSER,
+    -- FILMTITLE,
+    -- FILMDIRECTOR,
+    -- SUBJECT,
+    -- MESSAGE,
+    -- VALUE,
+    -- CONTRACT,
+    -- SECONDUSER,
+    -- MOTTO,
+    -- OPEN)
+-- SELECT  ETYPE,
+        -- TO_DATE(EV_DATE || EV_HOUR, 'YYYY-MM-DD HH24:MI'),
+        -- CLUB,
+        -- CLIENT,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- NULL,
+        -- CONTRACTID,
+        -- NULL,
+        -- NULL,
+        -- NULL
+    -- FROM OLD_EVENTS
+    -- NATURAL JOIN CONTRACTS
+    -- WHERE ETYPE='viewing';
+
