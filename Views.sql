@@ -1,6 +1,56 @@
 drop view Leaders;
+drop view Captain_Aragna;
 
--- Leaders View
+-- Captain_Aragna View
+create view Captain_Aragna
+as
+select m.member, numNotComment / count(*) as percentage from
+proposals p
+inner join
+(select p.member, count(*) as numNotComment
+from
+proposals p
+left outer join
+comments c
+on p.title = c.title and p.director = c.director and p.member=c.nick
+where c.nick is null
+group by p.member) m
+on p.member = m.member
+group by m.member, numNotComment
+order by percentage desc;
+
+-- Captain_aragna testing
+-- Inserting two users into the same club and then one makes a propsals while the other comments. Because there is only one comment not made by the original user their percentage is 1 and this can be seen in the change between the table.
+delete from users where nick = 'fsdb260';
+delete from membership where nick = 'fsdb260';
+delete from proposals where member = 'fsdb260';
+delete from users where nick = 'fsdb259';
+delete from membership where nick = 'fsdb259';
+delete from comments where nick = 'fsdb259';
+
+select * from Captain_Aragna where percentage = 1;
+
+set termout off;
+insert into users (nick, password, email, reg_date) values ('fsdb260', '123456789', 'fsdb260@gmail.com', '3-apr-18');
+insert into membership (nick, club, mentor, type, req_date, inc_date, end_date, req_msg, acc_msg)
+values ('fsdb260', 'Job Club', NULL, 'F', '18-JUL-19', '19-JUL-19', NULL, NULL, NULL);
+insert into proposals (title, director, club, member, prop_date, slogan, message)
+values ('The Rock', 'Michael Bay', 'Job Club', 'fsdb260', '20-JUL-19', NULL, NULL);
+
+insert into users (nick, password, email, reg_date) values ('fsdb259', '123456789', 'fsdb1@gmail.com', '3-apr-18');
+insert into membership (nick, club, mentor, type, req_date, inc_date, end_date, req_msg, acc_msg)
+values ('fsdb259', 'Job Club', NULL, 'F', '18-JUL-19', '19-JUL-19', NULL, NULL, NULL);
+insert into comments (club, nick, msg_date, title, director, subject, message, valoration)
+values ('Job Club', 'fsdb259', '20-JUL-19', 'The Rock', 'Michael Bay', NULL, NULL, NULL);
+
+set termout on;
+
+select * from Captain_Aragna where percentage = 1;
+
+
+select * from Captain_Aragna;
+
+Leaders View
 
 create view Leaders
 as
