@@ -63,7 +63,7 @@ Drop trigger NCM_delete_trigger;
 		delete from candidates where club = :old.name;
 		delete from proposals where club = :old.name;
 		delete from comments where club = :old.name;
-		update membership set club = null where mentor = :old.name;
+        update membership set mentor = null where club = :old.name;
 		delete from Membership where club = :OLD.name;
 		delete from clubs where name = :OLD.name;
  	END;
@@ -87,7 +87,6 @@ Drop trigger NCM_delete_trigger;
 -- Non Current Clubs insert trigger
  CREATE TRIGGER NCC_insert_trigger
 	INSTEAD OF INSERT ON NonCurrentClubs
-	FOR EACH ROW
 	DECLARE insert_error EXCEPTION;
 	BEGIN
 		RAISE insert_error;
@@ -97,7 +96,6 @@ Drop trigger NCM_delete_trigger;
 -- Non Current Membership insert trigger
  CREATE TRIGGER NCM_insert_trigger
 	INSTEAD OF INSERT ON NonCurrentMembership
-	FOR EACH ROW
 	DECLARE insert_error EXCEPTION;
 	BEGIN
 		RAISE insert_error;
@@ -107,7 +105,6 @@ Drop trigger NCM_delete_trigger;
 -- Non Current Membership update trigger
  CREATE TRIGGER NCM_update_trigger
 	INSTEAD OF UPDATE ON NonCurrentMembership
-	FOR EACH ROW
 	DECLARE update_error EXCEPTION;
 	BEGIN
 		RAISE update_error;
@@ -117,7 +114,6 @@ Drop trigger NCM_delete_trigger;
 -- Non Current Clubs update trigger
  CREATE TRIGGER NCC_update_trigger
 	INSTEAD OF UPDATE ON NonCurrentClubs
-	FOR EACH ROW
 	DECLARE update_error EXCEPTION;
 	BEGIN
 		RAISE update_error;
@@ -127,7 +123,6 @@ Drop trigger NCM_delete_trigger;
 -- Current Membership update trigger
  CREATE TRIGGER CM_update_trigger
 	INSTEAD OF UPDATE ON CurrentMembership
-	FOR EACH ROW
 	DECLARE update_error EXCEPTION;
 	BEGIN
 		RAISE update_error;
@@ -137,7 +132,6 @@ Drop trigger NCM_delete_trigger;
 -- Current Clubs update trigger
  CREATE TRIGGER CC_update_trigger
 	INSTEAD OF UPDATE ON CurrentClubs
-	FOR EACH ROW
 	DECLARE update_error EXCEPTION;
 	BEGIN
 		RAISE update_error;
@@ -192,7 +186,7 @@ update currentClubs set founder = 'fsdb260' where founder = 'ca';
 update nonCurrentClubs set founder = 'fsdb260' where founder = 'eva6';
 
 update currentMembership set nick = 'fsdb260' where nick = 'juan1';
-update NonCurrentMembership set nic = 'fsdb260' where nick = 'betty';
+update NonCurrentMembership set nick = 'fsdb260' where nick = 'betty';
 
 
 

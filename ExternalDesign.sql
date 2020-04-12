@@ -2,11 +2,11 @@ drop view administer_pub;
 drop view favorite_genres;
 drop view pending;
 
--- drop user fsdb259_test;
--- create user fsdb259_test identified by 123456789;
--- grant select on administer_pub to fsdb259_test;
--- grant select on favorite_genres to fsdb259_test;
--- grant select on pending to fsdb259_test;
+drop user fsdb259_test;
+create user fsdb259_test identified by 123456789;
+grant select on administer_pub to fsdb259_test;
+grant select on favorite_genres to fsdb259_test;
+grant select on pending to fsdb259_test;
 
 delete from users where nick = 'JAY';
 delete from users where nick = 'jay';
@@ -16,8 +16,6 @@ delete from membership where nick = 'JAY';
 delete from membership where nick = 'jay';
 delete from clubs where name like '%fsdb259%';
 
-
--- THESE NEED TO BE VIEWS AND ALSO PRIVILEDGES
 create view administer_pub
 as
 (
